@@ -2,32 +2,45 @@ import pygame.image
 from pygame import sprite
 
 PROJECTILE_SPEED = 10
+
 ENEMY_W, ENEMY_H = 90, 60
-SPACESHIP_W, SPACESHIP_H = 50, 80
-ENEMY_SPEED = -5
+ENEMY_DX = -5
 ENEMY_DY = 100
+
+SPACESHIP_W, SPACESHIP_H = 50, 80
+SHIP_SPEED = 10
+
+EXPLOSION_W, EXPLOSION_H = 150, 150
 
 
 class Animation(sprite.Sprite):
-    def __init__(self, images, position):
+    def __init__(self, images, position, times_per_frame=1, should_loop=True):
         super().__init__()
         self.position = position
         self._frames = images
         self._frame_number = 0
         self._rect = images[self._frame_number].get_rect()
-        self._should_loop = False
+        self._should_loop = should_loop
         self._finished = False
+        self._draw_counter = 0
+        self._times_per_frame = times_per_frame
 
     def draw(self, surface):
-        if self._frame_number == len(self._frames):
-            self._finished = True
-            self._frame_number = 0
+        if self._finished:
+            return
 
         frame = self._frames[self._frame_number]
         self._rect = frame.get_rect()
         self._rect.center = self.position
         surface.blit(frame, self._rect)
-        self._frame_number += 1
+
+        self._draw_counter += 1
+        if self._draw_counter > self._times_per_frame:
+            self._draw_counter = 0
+            self._frame_number += 1
+            if self._frame_number == len(self._frames):
+                self._finished = not self._should_loop
+                self._frame_number = 0
 
     def reset(self):
         self._frame_number = 0
@@ -45,7 +58,7 @@ class Animation(sprite.Sprite):
 class Spaceship(object):
     def __init__(self, position):
         self.images = [
-            pygame.transform.scale(pygame.image.load("resources/spaceship.png"), (SPACESHIP_W, SPACESHIP_H))
+            pygame.transform.scale(pygame.image.load("resources/spaceship.png"), (SPACESHIP_W, SPACESHIP_H)),
         ]
         self.animation = Animation(self.images, position)
         self.speed = 0
@@ -54,7 +67,7 @@ class Spaceship(object):
         self.animation.draw(surface)
 
     def update(self, field_size):
-        if self.animation._rect.left + self.speed < 0 or self.animation._rect.right + self.speed > field_size[0]:
+        if self.animation.position[0] - SPACESHIP_W / 2 + self.speed < 0 or self.animation.position[0] + SPACESHIP_W / 2 + self.speed > field_size[0]:
             self.speed = 0
         if self.speed != 0:
             self.animation.position = (self.animation.position[0] + self.speed, self.animation.position[1])
@@ -66,29 +79,42 @@ class Spaceship(object):
 class Enemy(sprite.Sprite):
     def __init__(self, position):
         super().__init__()
-        self.image = pygame.transform.scale(pygame.image.load("resources/invader.png"), (ENEMY_W, ENEMY_H))
-        self.rect = self.image.get_rect()
-        self.rect.center = position
-        self.speed = ENEMY_SPEED
-        # self.animation
+        self._enemy_images = [
+            pygame.transform.scale(pygame.image.load("resources/invader.png"), (ENEMY_W, ENEMY_H)),
+        ]
+        explosion = pygame.image.load("resources/explosion.png")
+        self._explode_images = [
+            pygame.transform.scale(explosion, (EXPLOSION_W / 2, EXPLOSION_H / 2)),
+            pygame.transform.scale(explosion, (EXPLOSION_W / 1.9, EXPLOSION_H / 1.9)),
+            pygame.transform.scale(explosion, (EXPLOSION_W / 1.7, EXPLOSION_H / 1.7)),
+            pygame.transform.scale(explosion, (EXPLOSION_W / 1.5, EXPLOSION_H / 1.5)),
+            pygame.transform.scale(explosion, (EXPLOSION_W / 1.3, EXPLOSION_H / 1.3)),
+            pygame.transform.scale(explosion, (EXPLOSION_W / 1.1, EXPLOSION_H / 1.1)),
+            pygame.transform.scale(explosion, (EXPLOSION_W, EXPLOSION_H)),
+            pygame.transform.scale(explosion, (EXPLOSION_W / 1.1, EXPLOSION_H / 1.1)),
+            pygame.transform.scale(explosion, (EXPLOSION_W / 1.3, EXPLOSION_H / 1.3)),
+            pygame.transform.scale(explosion, (EXPLOSION_W / 1.5, EXPLOSION_H / 1.5)),
+            pygame.transform.scale(explosion, (EXPLOSION_W / 1.7, EXPLOSION_H / 1.7)),
+            pygame.transform.scale(explosion, (EXPLOSION_W / 1.9, EXPLOSION_H / 1.9)),
+            pygame.transform.scale(explosion, (EXPLOSION_W / 2, EXPLOSION_H / 2)),
+        ]
+        self.animation = Animation(self._enemy_images, position)
+        self.speed = ENEMY_DX
 
     def draw(self, surface):
-        surface.blit(self.image, self.rect)
+        self.animation.draw(surface)
 
     def update(self, field_size):
         w, h = field_size
-        if self.rect.left + self.speed < 0 or self.rect.right + self.speed > w:
-            self.rect.centery += ENEMY_DY
+        if self.animation.position[0] - ENEMY_W / 2 + self.speed < 0 or self.animation.position[0] + ENEMY_W / 2 + self.speed > w:
+            self.animation.position = (self.animation.position[0], self.animation.position[1] + ENEMY_DY)
             self.speed = -self.speed
         else:
-            self.rect.centerx += self.speed
+            self.animation.position = (self.animation.position[0] + self.speed, self.animation.position[1])
 
-        if self.rect.bottom + ENEMY_DY > h:
-            self.rect.centery -= ENEMY_DY
-            old_center = self.rect.center
-            self.image = pygame.transform.scale(pygame.image.load("resources/explosion.png"), (150, 150))
-            self.rect = self.image.get_rect()
-            self.rect.center = old_center
+        if self.animation.position[1] + ENEMY_H / 2 + ENEMY_DY > h:
+            self.animation.position = (self.animation.position[0] + self.speed, self.animation.position[1] - ENEMY_DY)
+            self.animation = Animation(self._explode_images, self.animation.position, 5, False)
             self.speed = 0
 
 

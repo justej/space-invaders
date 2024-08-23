@@ -3,7 +3,6 @@ from pygame.locals import *
 from objects import *
 
 FPS = 60
-SHIP_SPEED = 10
 
 
 class App:
@@ -11,7 +10,7 @@ class App:
         self._running = True
         self._display_surf = None
         self.size = self.width, self.height = 640, 400
-        self.ship = Spaceship((self.width / 2, self.height - SPACESHIP_H))
+        self.ship = Spaceship((self.width / 2, self.height - SPACESHIP_H / 2))
         self.enemies = [Enemy((self.width / 2, ENEMY_H))]
 
     def on_init(self):
