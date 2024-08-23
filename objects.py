@@ -77,7 +77,7 @@ class Spaceship(object):
 
 
 class Enemy(sprite.Sprite):
-    def __init__(self, position):
+    def __init__(self, position, move_left):
         super().__init__()
         self._enemy_images = [
             pygame.transform.scale(pygame.image.load("resources/invader.png"), (ENEMY_W, ENEMY_H)),
@@ -99,7 +99,7 @@ class Enemy(sprite.Sprite):
             pygame.transform.scale(explosion, (EXPLOSION_W / 2, EXPLOSION_H / 2)),
         ]
         self.animation = Animation(self._enemy_images, position)
-        self.speed = ENEMY_DX
+        self.speed = ENEMY_DX if move_left else -ENEMY_DX
 
     def draw(self, surface):
         self.animation.draw(surface)

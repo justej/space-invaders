@@ -1,8 +1,12 @@
+from random import Random
+
 import pygame
-from pygame.locals import *
+
 from objects import *
 
 FPS = 60
+
+rand = Random()
 
 
 class App:
@@ -11,7 +15,10 @@ class App:
         self._display_surf = None
         self.size = self.width, self.height = 640, 400
         self.ship = Spaceship((self.width / 2, self.height - SPACESHIP_H / 2))
-        self.enemies = [Enemy((self.width / 2, ENEMY_H))]
+        self.enemies = [self.spawn_enemy()]
+
+    def spawn_enemy(self):
+        return Enemy((self.width / 2, ENEMY_H), rand.randint(0, 1))
 
     def on_init(self):
         pygame.init()
@@ -36,7 +43,11 @@ class App:
     def on_loop(self):
         self.ship.update(self.size)
         for enemy in self.enemies:
-            enemy.update(self.size)
+            if enemy.animation.finished():
+                self.enemies.remove(enemy)
+                self.enemies.append(self.spawn_enemy())
+            else:
+                enemy.update(self.size)
 
     def on_render(self):
         pygame.time.Clock().tick(FPS)
