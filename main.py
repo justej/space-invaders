@@ -4,6 +4,8 @@ import pygame
 
 from objects import *
 
+BG_COLOR = pygame.Color(0, 0, 255)
+
 FPS = 60
 
 rand = Random()
@@ -15,6 +17,7 @@ class App:
         self._display_surf = None
         self.size = self.width, self.height = 640, 400
         self.ship = Spaceship((self.width / 2, self.height - SPACESHIP_H / 2))
+        self.background = pygame.image.load("resources/background.png")
         self.enemies = [self.spawn_enemy()]
 
     def spawn_enemy(self):
@@ -51,7 +54,8 @@ class App:
 
     def on_render(self):
         pygame.time.Clock().tick(FPS)
-        self._display_surf.fill(pygame.Color(0, 0, 0))
+        self._display_surf.fill(BG_COLOR)
+        self._display_surf.blit(self.background, self.background.get_rect())
         self.ship.draw(self._display_surf)
         for enemy in self.enemies:
             enemy.draw(self._display_surf)
