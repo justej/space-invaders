@@ -1,6 +1,7 @@
 import pygame.image
 from pygame import sprite
 
+PROJECTILE_W, PROJECTILE_H = 11, 17
 PROJECTILE_SPEED = 10
 
 ENEMY_W, ENEMY_H = 90, 60
@@ -121,13 +122,25 @@ class Enemy(sprite.Sprite):
 class Projectile(sprite.Sprite):
     def __init__(self, position):
         super().__init__()
-        self.image = pygame.image.load("resources/projectile.png")
-        self.rect = self.image.get_rect()
-        self.rect.center = position
+        self._image = pygame.transform.scale(pygame.image.load("resources/projectile.png").convert(), (PROJECTILE_W, PROJECTILE_H))
+        self._rect = self._image.get_rect()
+        self._rect.center = position
+        self._finished = False
 
-    def update(self):
-        position = self.rect.center
-        self.rect.center = (position[0], position[1] - PROJECTILE_SPEED)
+    def update(self, field_size):
+        if self._finished:
+            return
+
+        position = self._rect.center
+        self._rect.center = (position[0], position[1] - PROJECTILE_SPEED)
+        if self._rect.bottom < 0:
+            self._finished = True
+
+    def draw(self, surface):
+        surface.blit(self._image, self._rect)
+
+    def finished(self):
+        return self._finished
 
 
 class Bomb(sprite.Sprite):
