@@ -1,4 +1,3 @@
-import time
 from random import Random
 
 import pygame
@@ -50,15 +49,14 @@ class App:
 
         if keys[pygame.K_SPACE]:
             if len(self.projectiles) < MAX_PROJECTILES_NUMBER and (
-                    len(self.projectiles) == 0 or (self.projectiles[-1]._rect[1] < self.size[1] - 100)):
+                    len(self.projectiles) == 0 or (self.projectiles[-1].rect().centery < self.size[1] - SPACESHIP_H)):
                 self.projectiles.append(self.spawn_projectile(self.ship.animation.position))
-            print(time.time(), len(self.projectiles), self.projectiles[-1]._rect[1], self.size[1] - 60, tuple(p._rect[1] for p in self.projectiles))
 
     def on_loop(self):
         self.ship.update(self.size)
 
         for enemy in self.enemies:
-            if enemy.animation.finished():
+            if enemy.finished():
                 self.enemies.remove(enemy)
                 self.enemies.append(self.spawn_enemy())
             else:
@@ -68,7 +66,12 @@ class App:
             projectile.update(self.size)
             if projectile.finished():
                 self.projectiles.remove(projectile)
-                print(len(self.projectiles))
+
+            for enemy in self.enemies:
+                if not enemy.is_exploding() and enemy.rect().colliderect(projectile.rect()):
+                    enemy.explode()
+                    self.projectiles.remove(projectile)
+                    del projectile
 
     def on_render(self):
         pygame.time.Clock().tick(FPS)

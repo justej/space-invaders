@@ -55,6 +55,9 @@ class Animation(sprite.Sprite):
             self._should_loop = should_loop
         return self.should_loop
 
+    def rect(self):
+        return self._rect.copy()
+
 
 class Spaceship(object):
     def __init__(self, position):
@@ -101,6 +104,7 @@ class Enemy(sprite.Sprite):
         ]
         self.animation = Animation(self._enemy_images, position)
         self.speed = ENEMY_DX if move_left else -ENEMY_DX
+        self._is_exploding = False
 
     def draw(self, surface):
         self.animation.draw(surface)
@@ -115,8 +119,21 @@ class Enemy(sprite.Sprite):
 
         if self.animation.position[1] + ENEMY_H / 2 + ENEMY_DY > h:
             self.animation.position = (self.animation.position[0] + self.speed, self.animation.position[1] - ENEMY_DY)
-            self.animation = Animation(self._explode_images, self.animation.position, 5, False)
-            self.speed = 0
+            self.explode()
+
+    def rect(self):
+        return self.animation.rect()
+
+    def explode(self):
+        self.animation = Animation(self._explode_images, self.animation.position, 1, False)
+        self.speed = 0
+        self._is_exploding = True
+
+    def finished(self):
+        return self.animation.finished()
+
+    def is_exploding(self):
+        return self._is_exploding
 
 
 class Projectile(sprite.Sprite):
@@ -141,6 +158,9 @@ class Projectile(sprite.Sprite):
 
     def finished(self):
         return self._finished
+
+    def rect(self):
+        return self._rect.copy()
 
 
 class Bomb(sprite.Sprite):
