@@ -9,7 +9,10 @@ MAX_ENEMIES_NUMBER = 10
 MIN_DISTANCE_BETWEEN_ENEMIES = 100
 
 BG_COLOR = pygame.Color(0, 0, 255)
+FG_COLOR = pygame.Color(255, 255, 255)
+
 FPS = 60
+FONT_SIZE = 30
 
 random_generator = Random()
 
@@ -24,6 +27,7 @@ class App:
         self.invaders = [self.spawn_invader()]
         self.invader_spawn_counter = 0
         self.projectiles = []
+        self.score = Score()
 
     def spawn_invader(self):
         x = random_generator.randint(INVADER_W / 2, self.width - INVADER_W / 2)
@@ -53,8 +57,8 @@ class App:
             self.ship.move(0)
 
         if keys[pygame.K_SPACE]:
-            if len(self.projectiles) < MAX_PROJECTILES_NUMBER and (
-                    len(self.projectiles) == 0 or (self.projectiles[-1].rect().centery < self.size[1] - SPACESHIP_H)):
+            if len(self.projectiles) < MAX_PROJECTILES_NUMBER and (len(self.projectiles) == 0 or (self.projectiles[-1].rect().centery < self.size[1] - SPACESHIP_H)):
+                self.score.shot()
                 self.projectiles.append(self.spawn_projectile(self.ship.animation.position))
 
     def on_loop(self):
@@ -75,6 +79,7 @@ class App:
             for invader in self.invaders:
                 if not invader.is_exploding() and invader.rect().colliderect(projectile.rect()):
                     invader.explode()
+                    self.score.inveder_hit()
                     self.projectiles.remove(projectile)
                     break
 
@@ -94,6 +99,9 @@ class App:
 
         for projectile in self.projectiles:
             projectile.draw(self._display_surf)
+
+        self.score.draw(self._display_surf, self.size)
+
         pygame.display.update()
 
     def on_cleanup(self):
@@ -109,6 +117,27 @@ class App:
             self.on_loop()
             self.on_render()
         self.on_cleanup()
+
+
+class Score(object):
+    def __init__(self):
+        self._projectiles_count = 0
+        self._invaders_count = 0
+
+        pygame.font.init()
+        self._font = pygame.font.SysFont('Comic Sans MS', FONT_SIZE)
+
+    def shot(self):
+        self._projectiles_count += 1
+
+    def inveder_hit(self):
+        self._invaders_count += 1
+
+    def draw(self, surface, field_size):
+        text_invaders = self._font.render(f"HIT: {str(self._invaders_count)}", False, FG_COLOR)
+        surface.blit(text_invaders, (FONT_SIZE * 2, 0))
+        text_projectiles = self._font.render(f"SHOT: {str(self._projectiles_count)}", False, FG_COLOR)
+        surface.blit(text_projectiles, (field_size[0] - FONT_SIZE * 6, 0))
 
 
 if __name__ == "__main__":
