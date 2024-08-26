@@ -21,13 +21,13 @@ class App:
         self.size = self.width, self.height = 640, 400
         self.ship = Spaceship((self.width / 2, self.height - SPACESHIP_H / 2))
         self.background = pygame.image.load("resources/background.png")
-        self.enemies = [self.spawn_enemy()]
-        self.enemy_spawn_counter = 0
+        self.invaders = [self.spawn_invader()]
+        self.invader_spawn_counter = 0
         self.projectiles = []
 
-    def spawn_enemy(self):
-        x = random_generator.randint(ENEMY_W / 2, self.width - ENEMY_W / 2)
-        return Enemy((x, ENEMY_H), random_generator.randint(0, 1))
+    def spawn_invader(self):
+        x = random_generator.randint(INVADER_W / 2, self.width - INVADER_W / 2)
+        return Invader((x, INVADER_H), random_generator.randint(0, 1))
 
     def spawn_projectile(self, position):
         return Projectile(position)
@@ -60,28 +60,28 @@ class App:
     def on_loop(self):
         self.ship.update(self.size)
 
-        for enemy in self.enemies:
-            if enemy.finished():
-                self.enemies.remove(enemy)
-                self.enemies.append(self.spawn_enemy())
+        for invader in self.invaders:
+            if invader.finished():
+                self.invaders.remove(invader)
+                self.invaders.append(self.spawn_invader())
             else:
-                enemy.update(self.size)
+                invader.update(self.size)
 
         for projectile in self.projectiles:
             projectile.update(self.size)
             if projectile.finished():
                 self.projectiles.remove(projectile)
 
-            for enemy in self.enemies:
-                if not enemy.is_exploding() and enemy.rect().colliderect(projectile.rect()):
-                    enemy.explode()
+            for invader in self.invaders:
+                if not invader.is_exploding() and invader.rect().colliderect(projectile.rect()):
+                    invader.explode()
                     self.projectiles.remove(projectile)
                     break
 
-        self.enemy_spawn_counter += 1
-        if len(self.enemies) < MAX_ENEMIES_NUMBER and self.enemy_spawn_counter > 100:
-            self.enemies.append(self.spawn_enemy())
-            self.enemy_spawn_counter = 0
+        self.invader_spawn_counter += 1
+        if len(self.invaders) < MAX_ENEMIES_NUMBER and self.invader_spawn_counter > 100:
+            self.invaders.append(self.spawn_invader())
+            self.invader_spawn_counter = 0
 
     def on_render(self):
         pygame.time.Clock().tick(FPS)
@@ -89,8 +89,8 @@ class App:
         self._display_surf.blit(self.background, self.background.get_rect())
         self.ship.draw(self._display_surf)
 
-        for enemy in self.enemies:
-            enemy.draw(self._display_surf)
+        for invader in self.invaders:
+            invader.draw(self._display_surf)
 
         for projectile in self.projectiles:
             projectile.draw(self._display_surf)

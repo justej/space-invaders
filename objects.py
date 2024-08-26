@@ -4,9 +4,9 @@ from pygame import sprite
 PROJECTILE_W, PROJECTILE_H = 11, 17
 PROJECTILE_SPEED = 10
 
-ENEMY_W, ENEMY_H = 90, 60
-ENEMY_DX = -5
-ENEMY_DY = 100
+INVADER_W, INVADER_H = 90, 60
+INVADER_DX = -5
+INVADER_DY = 100
 
 SPACESHIP_W, SPACESHIP_H = 50, 80
 SHIP_SPEED = 10
@@ -80,11 +80,11 @@ class Spaceship(object):
         self.speed = speed
 
 
-class Enemy(sprite.Sprite):
+class Invader(sprite.Sprite):
     def __init__(self, position, move_left):
         super().__init__()
-        self._enemy_images = [
-            pygame.transform.scale(pygame.image.load("resources/invader.png"), (ENEMY_W, ENEMY_H)),
+        self._invader_images = [
+            pygame.transform.scale(pygame.image.load("resources/invader.png"), (INVADER_W, INVADER_H)),
         ]
         explosion = pygame.image.load("resources/explosion.png")
         self._explode_images = [
@@ -102,8 +102,8 @@ class Enemy(sprite.Sprite):
             pygame.transform.scale(explosion, (EXPLOSION_W / 1.9, EXPLOSION_H / 1.9)),
             pygame.transform.scale(explosion, (EXPLOSION_W / 2, EXPLOSION_H / 2)),
         ]
-        self.animation = Animation(self._enemy_images, position)
-        self.speed = ENEMY_DX if move_left else -ENEMY_DX
+        self.animation = Animation(self._invader_images, position)
+        self.speed = INVADER_DX if move_left else -INVADER_DX
         self._is_exploding = False
 
     def draw(self, surface):
@@ -111,14 +111,14 @@ class Enemy(sprite.Sprite):
 
     def update(self, field_size):
         w, h = field_size
-        if self.animation.position[0] - ENEMY_W / 2 + self.speed < 0 or self.animation.position[0] + ENEMY_W / 2 + self.speed > w:
-            self.animation.position = (self.animation.position[0], self.animation.position[1] + ENEMY_DY)
+        if self.animation.position[0] - INVADER_W / 2 + self.speed < 0 or self.animation.position[0] + INVADER_W / 2 + self.speed > w:
+            self.animation.position = (self.animation.position[0], self.animation.position[1] + INVADER_DY)
             self.speed = -self.speed
         else:
             self.animation.position = (self.animation.position[0] + self.speed, self.animation.position[1])
 
-        if self.animation.position[1] + ENEMY_H / 2 + ENEMY_DY > h:
-            self.animation.position = (self.animation.position[0] + self.speed, self.animation.position[1] - ENEMY_DY)
+        if self.animation.position[1] + INVADER_H / 2 + INVADER_DY > h:
+            self.animation.position = (self.animation.position[0] + self.speed, self.animation.position[1] - INVADER_DY)
             self.explode()
 
     def rect(self):
