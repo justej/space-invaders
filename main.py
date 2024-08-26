@@ -5,10 +5,13 @@ import pygame
 from objects import *
 
 MAX_PROJECTILES_NUMBER = 5
+MAX_ENEMIES_NUMBER = 10
+MIN_DISTANCE_BETWEEN_ENEMIES = 100
+
 BG_COLOR = pygame.Color(0, 0, 255)
 FPS = 60
 
-rand = Random()
+random_generator = Random()
 
 
 class App:
@@ -19,10 +22,12 @@ class App:
         self.ship = Spaceship((self.width / 2, self.height - SPACESHIP_H / 2))
         self.background = pygame.image.load("resources/background.png")
         self.enemies = [self.spawn_enemy()]
+        self.enemy_spawn_counter = 0
         self.projectiles = []
 
     def spawn_enemy(self):
-        return Enemy((self.width / 2, ENEMY_H), rand.randint(0, 1))
+        x = random_generator.randint(ENEMY_W / 2, self.width - ENEMY_W / 2)
+        return Enemy((x, ENEMY_H), random_generator.randint(0, 1))
 
     def spawn_projectile(self, position):
         return Projectile(position)
@@ -71,7 +76,12 @@ class App:
                 if not enemy.is_exploding() and enemy.rect().colliderect(projectile.rect()):
                     enemy.explode()
                     self.projectiles.remove(projectile)
-                    del projectile
+                    break
+
+        self.enemy_spawn_counter += 1
+        if len(self.enemies) < MAX_ENEMIES_NUMBER and self.enemy_spawn_counter > 100:
+            self.enemies.append(self.spawn_enemy())
+            self.enemy_spawn_counter = 0
 
     def on_render(self):
         pygame.time.Clock().tick(FPS)
