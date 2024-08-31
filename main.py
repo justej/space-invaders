@@ -4,26 +4,22 @@ import pygame
 
 from objects import *
 
-MAX_PROJECTILES_NUMBER = 5
-MAX_ENEMIES_NUMBER = 10
-MIN_DISTANCE_BETWEEN_ENEMIES = 100
-
-BG_COLOR = pygame.Color(0, 0, 255)
-FG_COLOR = pygame.Color(255, 255, 255)
-
-FPS = 60
-FONT_SIZE = 30
-GAME_OVER_FONT_SIZE = 60
-
-random_generator = Random()
-
 
 class App:
+    FPS = 60
+    BG_COLOR = pygame.Color(0, 0, 255)
+    INVADER_SPAWN_SPEED = 100
+    INVADER_BOMB_LAUNCH_SPEED = 50
+    FIELD_SIZE = 640, 400
+    MAX_PROJECTILES_NUMBER = 5
+    MAX_INVADERS_NUMBER = 10
+    random_generator = Random()
+
     def __init__(self):
         self._running = True
         self._display_surf = None
-        self._size = self.width, self.height = 640, 400
-        self._ship = Spaceship((self.width / 2, self.height - SPACESHIP_H / 2))
+        self._size = self.width, self.height = App.FIELD_SIZE
+        self._ship = Spaceship((self.width / 2, self.height - Spaceship.H / 2))
         self._background = pygame.image.load("resources/background.png")
         self._invaders = [self.spawn_invader()]
         self._invader_spawn_counter = 0
@@ -33,8 +29,8 @@ class App:
         self._game_over = None
 
     def spawn_invader(self):
-        x = random_generator.randint(INVADER_W / 2, self.width - INVADER_W / 2)
-        return Invader((x, INVADER_H), random_generator.randint(0, 1))
+        x = App.random_generator.randint(Invader.W / 2, self.width - Invader.W / 2)
+        return Invader((x, Invader.H), App.random_generator.randint(0, 1))
 
     def spawn_projectile(self, position):
         return Projectile(position)
@@ -44,7 +40,7 @@ class App:
         self._display_surf = pygame.display.set_mode(self._size, pygame.HWSURFACE | pygame.DOUBLEBUF)
         self._running = True
 
-        pygame.time.Clock().tick(FPS)
+        pygame.time.Clock().tick(App.FPS)
         pygame.display.set_caption("Space invaders")
 
         pygame.font.init()
@@ -58,15 +54,15 @@ class App:
 
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT]:
-            self._ship.move(-SHIP_SPEED)
+            self._ship.move(-Spaceship.SPEED)
         elif keys[pygame.K_RIGHT]:
-            self._ship.move(SHIP_SPEED)
+            self._ship.move(Spaceship.SPEED)
         else:
             self._ship.move(0)
 
         if keys[pygame.K_SPACE]:
-            if len(self._projectiles) < MAX_PROJECTILES_NUMBER and \
-                    (len(self._projectiles) == 0 or (self._projectiles[-1].rect().centery < self._size[1] - SPACESHIP_H)):
+            if len(self._projectiles) < App.MAX_PROJECTILES_NUMBER and \
+                    (len(self._projectiles) == 0 or (self._projectiles[-1].rect().centery < self._size[1] - Spaceship.H)):
                 self._score.shot()
                 rect = self._ship.rect()
                 self._projectiles.append(Projectile(rect.center))
@@ -99,11 +95,11 @@ class App:
                     break
 
         self._invader_spawn_counter += 1
-        if len(self._invaders) < MAX_ENEMIES_NUMBER and self._invader_spawn_counter % 100 == 0:
+        if len(self._invaders) < App.MAX_INVADERS_NUMBER and self._invader_spawn_counter % App.INVADER_SPAWN_SPEED == 0:
             self._invaders.append(self.spawn_invader())
 
-        if len(self._invaders) > 0 and self._invader_spawn_counter % 50 == 0:
-            n = random_generator.randint(0, len(self._invaders) - 1)
+        if len(self._invaders) > 0 and self._invader_spawn_counter % App.INVADER_BOMB_LAUNCH_SPEED == 0:
+            n = App.random_generator.randint(0, len(self._invaders) - 1)
             invader_rect = self._invaders[n].rect()
             self._bombs.append(Bomb((invader_rect.center[0], invader_rect.bottom)))
 
@@ -121,8 +117,8 @@ class App:
             self._game_over.unfortunately = True
 
     def on_render(self):
-        pygame.time.Clock().tick(FPS)
-        self._display_surf.fill(BG_COLOR)
+        pygame.time.Clock().tick(App.FPS)
+        self._display_surf.fill(App.BG_COLOR)
         self._display_surf.blit(self._background, self._background.get_rect())
         self._ship.draw(self._display_surf)
 
@@ -156,10 +152,13 @@ class App:
 
 
 class Score(object):
+    FONT_SIZE = 30
+    COLOR = pygame.Color(255, 255, 255)
+
     def __init__(self):
         self._projectiles_count = 0
         self._invaders_count = 0
-        self._font = pygame.font.SysFont('Comic Sans MS', FONT_SIZE)
+        self._font = pygame.font.SysFont('Comic Sans MS', Score.FONT_SIZE)
 
     def shot(self):
         self._projectiles_count += 1
@@ -168,17 +167,21 @@ class Score(object):
         self._invaders_count += 1
 
     def draw(self, surface, field_size):
-        text_invaders = self._font.render(f"HIT: {str(self._invaders_count)}", False, FG_COLOR)
-        surface.blit(text_invaders, (FONT_SIZE * 2, 0))
-        text_projectiles = self._font.render(f"SHOT: {str(self._projectiles_count)}", False, FG_COLOR)
-        surface.blit(text_projectiles, (field_size[0] - FONT_SIZE * 6, 0))
+        text_invaders = self._font.render(f"HIT: {str(self._invaders_count)}", False, Score.COLOR)
+        surface.blit(text_invaders, (Score.FONT_SIZE * 2, 0))
+        text_projectiles = self._font.render(f"SHOT: {str(self._projectiles_count)}", False, Score.COLOR)
+        surface.blit(text_projectiles, (field_size[0] - Score.FONT_SIZE * 6, 0))
 
 
 class GameOver(object):
+    FONT_SIZE = 60
+    COLOR = pygame.Color(255, 255, 255)
+    BLINK_SPEED = 10
+
     def __init__(self):
         self.unfortunately = False
-        font = pygame.font.SysFont('Comic Sans MS', GAME_OVER_FONT_SIZE)
-        self._text = font.render("Game Over", False, FG_COLOR)
+        font = pygame.font.SysFont('Comic Sans MS', GameOver.FONT_SIZE)
+        self._text = font.render("Game Over", False, GameOver.COLOR)
         self._show = True
         self._show_counter = 0
 
@@ -187,7 +190,7 @@ class GameOver(object):
             return
 
         self._show_counter += 1
-        if self._show_counter % 10 == 0:
+        if self._show_counter % GameOver.BLINK_SPEED == 0:
             self._show = not self._show
 
     def draw(self, surface, field_size):

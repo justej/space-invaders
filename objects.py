@@ -1,21 +1,6 @@
 import pygame.image
 from pygame import sprite
 
-PROJECTILE_W, PROJECTILE_H = 11, 17
-PROJECTILE_SPEED = 10
-
-BOMB_W, BOMB_H = 30, 37
-BOMB_SPEED = 5
-
-INVADER_W, INVADER_H = 90, 60
-INVADER_DX = -5
-INVADER_DY = 100
-
-SPACESHIP_W, SPACESHIP_H = 50, 80
-SHIP_SPEED = 10
-
-EXPLOSION_W, EXPLOSION_H = 150, 150
-
 
 class Animation(sprite.Sprite):
     def __init__(self, images, position, times_per_frame=1, should_loop=True):
@@ -64,25 +49,29 @@ class Animation(sprite.Sprite):
 
 
 class Spaceship(object):
+    W, H = 50, 80
+    SPEED = 10
+    EXPLOSION_W, EXPLOSION_H = 150, 150
+
     def __init__(self, position):
         self._images = [
-            pygame.transform.scale(pygame.image.load("resources/spaceship.png"), (SPACESHIP_W, SPACESHIP_H)),
+            pygame.transform.scale(pygame.image.load("resources/spaceship.png"), (Spaceship.W, Spaceship.H)),
         ]
         explosion = pygame.image.load("resources/explosion.png")
         self._explode_images = [
-            pygame.transform.scale(explosion, (EXPLOSION_W / 2, EXPLOSION_H / 2)),
-            pygame.transform.scale(explosion, (EXPLOSION_W / 1.9, EXPLOSION_H / 1.9)),
-            pygame.transform.scale(explosion, (EXPLOSION_W / 1.7, EXPLOSION_H / 1.7)),
-            pygame.transform.scale(explosion, (EXPLOSION_W / 1.5, EXPLOSION_H / 1.5)),
-            pygame.transform.scale(explosion, (EXPLOSION_W / 1.3, EXPLOSION_H / 1.3)),
-            pygame.transform.scale(explosion, (EXPLOSION_W / 1.1, EXPLOSION_H / 1.1)),
-            pygame.transform.scale(explosion, (EXPLOSION_W, EXPLOSION_H)),
-            pygame.transform.scale(explosion, (EXPLOSION_W / 1.1, EXPLOSION_H / 1.1)),
-            pygame.transform.scale(explosion, (EXPLOSION_W / 1.3, EXPLOSION_H / 1.3)),
-            pygame.transform.scale(explosion, (EXPLOSION_W / 1.5, EXPLOSION_H / 1.5)),
-            pygame.transform.scale(explosion, (EXPLOSION_W / 1.7, EXPLOSION_H / 1.7)),
-            pygame.transform.scale(explosion, (EXPLOSION_W / 1.9, EXPLOSION_H / 1.9)),
-            pygame.transform.scale(explosion, (EXPLOSION_W / 2, EXPLOSION_H / 2)),
+            pygame.transform.scale(explosion, (Spaceship.EXPLOSION_W / 2, Spaceship.EXPLOSION_H / 2)),
+            pygame.transform.scale(explosion, (Spaceship.EXPLOSION_W / 1.9, Spaceship.EXPLOSION_H / 1.9)),
+            pygame.transform.scale(explosion, (Spaceship.EXPLOSION_W / 1.7, Spaceship.EXPLOSION_H / 1.7)),
+            pygame.transform.scale(explosion, (Spaceship.EXPLOSION_W / 1.5, Spaceship.EXPLOSION_H / 1.5)),
+            pygame.transform.scale(explosion, (Spaceship.EXPLOSION_W / 1.3, Spaceship.EXPLOSION_H / 1.3)),
+            pygame.transform.scale(explosion, (Spaceship.EXPLOSION_W / 1.1, Spaceship.EXPLOSION_H / 1.1)),
+            pygame.transform.scale(explosion, (Spaceship.EXPLOSION_W, Spaceship.EXPLOSION_H)),
+            pygame.transform.scale(explosion, (Spaceship.EXPLOSION_W / 1.1, Spaceship.EXPLOSION_H / 1.1)),
+            pygame.transform.scale(explosion, (Spaceship.EXPLOSION_W / 1.3, Spaceship.EXPLOSION_H / 1.3)),
+            pygame.transform.scale(explosion, (Spaceship.EXPLOSION_W / 1.5, Spaceship.EXPLOSION_H / 1.5)),
+            pygame.transform.scale(explosion, (Spaceship.EXPLOSION_W / 1.7, Spaceship.EXPLOSION_H / 1.7)),
+            pygame.transform.scale(explosion, (Spaceship.EXPLOSION_W / 1.9, Spaceship.EXPLOSION_H / 1.9)),
+            pygame.transform.scale(explosion, (Spaceship.EXPLOSION_W / 2, Spaceship.EXPLOSION_H / 2)),
         ]
         self._animation = Animation(self._images, position)
         self._speed = 0
@@ -92,8 +81,8 @@ class Spaceship(object):
         self._animation.draw(surface)
 
     def update(self, field_size):
-        if self._animation.position[0] - SPACESHIP_W / 2 + self._speed < 0 or \
-                self._animation.position[0] + SPACESHIP_W / 2 + self._speed > field_size[0]:
+        if self._animation.position[0] - Spaceship.W / 2 + self._speed < 0 or \
+                self._animation.position[0] + Spaceship.W / 2 + self._speed > field_size[0]:
             self._speed = 0
         if self._speed != 0:
             self._animation.position = (self._animation.position[0] + self._speed, self._animation.position[1])
@@ -117,29 +106,34 @@ class Spaceship(object):
 
 
 class Invader(sprite.Sprite):
+    W, H = 90, 60
+    DX = -5
+    DY = 100
+    EXPLOSION_W, EXPLOSION_H = 150, 150
+
     def __init__(self, position, move_left):
         super().__init__()
         self._invader_images = [
-            pygame.transform.scale(pygame.image.load("resources/invader.png"), (INVADER_W, INVADER_H)),
+            pygame.transform.scale(pygame.image.load("resources/invader.png"), (Invader.W, Invader.H)),
         ]
         explosion = pygame.image.load("resources/explosion.png")
         self._explode_images = [
-            pygame.transform.scale(explosion, (EXPLOSION_W / 2, EXPLOSION_H / 2)),
-            pygame.transform.scale(explosion, (EXPLOSION_W / 1.9, EXPLOSION_H / 1.9)),
-            pygame.transform.scale(explosion, (EXPLOSION_W / 1.7, EXPLOSION_H / 1.7)),
-            pygame.transform.scale(explosion, (EXPLOSION_W / 1.5, EXPLOSION_H / 1.5)),
-            pygame.transform.scale(explosion, (EXPLOSION_W / 1.3, EXPLOSION_H / 1.3)),
-            pygame.transform.scale(explosion, (EXPLOSION_W / 1.1, EXPLOSION_H / 1.1)),
-            pygame.transform.scale(explosion, (EXPLOSION_W, EXPLOSION_H)),
-            pygame.transform.scale(explosion, (EXPLOSION_W / 1.1, EXPLOSION_H / 1.1)),
-            pygame.transform.scale(explosion, (EXPLOSION_W / 1.3, EXPLOSION_H / 1.3)),
-            pygame.transform.scale(explosion, (EXPLOSION_W / 1.5, EXPLOSION_H / 1.5)),
-            pygame.transform.scale(explosion, (EXPLOSION_W / 1.7, EXPLOSION_H / 1.7)),
-            pygame.transform.scale(explosion, (EXPLOSION_W / 1.9, EXPLOSION_H / 1.9)),
-            pygame.transform.scale(explosion, (EXPLOSION_W / 2, EXPLOSION_H / 2)),
+            pygame.transform.scale(explosion, (Invader.EXPLOSION_W / 2, Invader.EXPLOSION_H / 2)),
+            pygame.transform.scale(explosion, (Invader.EXPLOSION_W / 1.9, Invader.EXPLOSION_H / 1.9)),
+            pygame.transform.scale(explosion, (Invader.EXPLOSION_W / 1.7, Invader.EXPLOSION_H / 1.7)),
+            pygame.transform.scale(explosion, (Invader.EXPLOSION_W / 1.5, Invader.EXPLOSION_H / 1.5)),
+            pygame.transform.scale(explosion, (Invader.EXPLOSION_W / 1.3, Invader.EXPLOSION_H / 1.3)),
+            pygame.transform.scale(explosion, (Invader.EXPLOSION_W / 1.1, Invader.EXPLOSION_H / 1.1)),
+            pygame.transform.scale(explosion, (Invader.EXPLOSION_W, Invader.EXPLOSION_H)),
+            pygame.transform.scale(explosion, (Invader.EXPLOSION_W / 1.1, Invader.EXPLOSION_H / 1.1)),
+            pygame.transform.scale(explosion, (Invader.EXPLOSION_W / 1.3, Invader.EXPLOSION_H / 1.3)),
+            pygame.transform.scale(explosion, (Invader.EXPLOSION_W / 1.5, Invader.EXPLOSION_H / 1.5)),
+            pygame.transform.scale(explosion, (Invader.EXPLOSION_W / 1.7, Invader.EXPLOSION_H / 1.7)),
+            pygame.transform.scale(explosion, (Invader.EXPLOSION_W / 1.9, Invader.EXPLOSION_H / 1.9)),
+            pygame.transform.scale(explosion, (Invader.EXPLOSION_W / 2, Invader.EXPLOSION_H / 2)),
         ]
         self._animation = Animation(self._invader_images, position)
-        self._speed = INVADER_DX if move_left else -INVADER_DX
+        self._speed = Invader.DX if move_left else -Invader.DX
         self._is_exploding = False
 
     def draw(self, surface):
@@ -147,14 +141,14 @@ class Invader(sprite.Sprite):
 
     def update(self, field_size):
         w, h = field_size
-        if self._animation.position[0] - INVADER_W / 2 + self._speed < 0 or self._animation.position[0] + INVADER_W / 2 + self._speed > w:
-            self._animation.position = (self._animation.position[0], self._animation.position[1] + INVADER_DY)
+        if self._animation.position[0] - Invader.W / 2 + self._speed < 0 or self._animation.position[0] + Invader.W / 2 + self._speed > w:
+            self._animation.position = (self._animation.position[0], self._animation.position[1] + Invader.DY)
             self._speed = -self._speed
         else:
             self._animation.position = (self._animation.position[0] + self._speed, self._animation.position[1])
 
-        if self._animation.position[1] + INVADER_H / 2 + INVADER_DY > h:
-            self._animation.position = (self._animation.position[0] + self._speed, self._animation.position[1] - INVADER_DY)
+        if self._animation.position[1] + Invader.H / 2 + Invader.DY > h:
+            self._animation.position = (self._animation.position[0] + self._speed, self._animation.position[1] - Invader.DY)
             self.explode()
 
     def rect(self):
@@ -173,9 +167,12 @@ class Invader(sprite.Sprite):
 
 
 class Projectile(sprite.Sprite):
+    W, H = 11, 17
+    SPEED = 10
+
     def __init__(self, position):
         super().__init__()
-        self._image = pygame.transform.scale(pygame.image.load("resources/projectile.png").convert(), (PROJECTILE_W, PROJECTILE_H))
+        self._image = pygame.transform.scale(pygame.image.load("resources/projectile.png").convert(), (Projectile.W, Projectile.H))
         self._rect = self._image.get_rect()
         self._rect.center = position
         self._finished = False
@@ -185,7 +182,7 @@ class Projectile(sprite.Sprite):
             return
 
         position = self._rect.center
-        self._rect.center = (position[0], position[1] - PROJECTILE_SPEED)
+        self._rect.center = (position[0], position[1] - Projectile.SPEED)
         if self._rect.bottom < 0:
             self._finished = True
 
@@ -200,9 +197,12 @@ class Projectile(sprite.Sprite):
 
 
 class Bomb(sprite.Sprite):
+    W, H = 30, 37
+    SPEED = 5
+
     def __init__(self, position):
         super().__init__()
-        self._image = pygame.transform.scale(pygame.image.load("resources/bomb.png"), (BOMB_W, BOMB_H))
+        self._image = pygame.transform.scale(pygame.image.load("resources/bomb.png"), (Bomb.W, Bomb.H))
         self._rect = self._image.get_rect()
         self._rect.center = position
         self._finished = False
@@ -212,7 +212,7 @@ class Bomb(sprite.Sprite):
             return
 
         position = self._rect.center
-        self._rect.center = (position[0], position[1] + BOMB_SPEED)
+        self._rect.center = (position[0], position[1] + Bomb.SPEED)
         if self._rect.top > field_size[1]:
             self._finished = True
 
