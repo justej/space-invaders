@@ -100,8 +100,11 @@ class App:
 
         if len(self._invaders) > 0 and self._invader_spawn_counter % App.INVADER_BOMB_LAUNCH_SPEED == 0:
             n = App.random_generator.randint(0, len(self._invaders) - 1)
-            invader_rect = self._invaders[n].rect()
-            self._bombs.append(Bomb((invader_rect.center[0], invader_rect.bottom)))
+            if self._invaders[n].is_exploding():
+                self._invader_spawn_counter -= 1
+            else:
+                invader_rect = self._invaders[n].rect()
+                self._bombs.append(Bomb((invader_rect.center[0], invader_rect.bottom)))
 
         for bomb in self._bombs:
             bomb.update(self._size)
