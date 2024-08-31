@@ -8,8 +8,8 @@ from objects import *
 class App:
     FPS = 60
     BG_COLOR = pygame.Color(0, 0, 255)
-    INVADER_SPAWN_SPEED = 100
-    INVADER_BOMB_LAUNCH_SPEED = 50
+    INVADER_SPAWN_FREQUENCY = 100
+    INVADER_BOMB_SHELL_FREQUENCY = 50
     FIELD_SIZE = 640, 400
     MAX_PROJECTILES_NUMBER = 5
     MAX_INVADERS_NUMBER = 10
@@ -95,10 +95,10 @@ class App:
                     break
 
         self._invader_spawn_counter += 1
-        if len(self._invaders) < App.MAX_INVADERS_NUMBER and self._invader_spawn_counter % App.INVADER_SPAWN_SPEED == 0:
+        if len(self._invaders) < App.MAX_INVADERS_NUMBER and self._invader_spawn_counter % App.INVADER_SPAWN_FREQUENCY == 0:
             self._invaders.append(self.spawn_invader())
 
-        if len(self._invaders) > 0 and self._invader_spawn_counter % App.INVADER_BOMB_LAUNCH_SPEED == 0:
+        if len(self._invaders) > 0 and self._invader_spawn_counter % App.INVADER_BOMB_SHELL_FREQUENCY == 0:
             n = App.random_generator.randint(0, len(self._invaders) - 1)
             if self._invaders[n].is_exploding():
                 self._invader_spawn_counter -= 1
@@ -179,7 +179,7 @@ class Score(object):
 class GameOver(object):
     FONT_SIZE = 60
     COLOR = pygame.Color(255, 255, 255)
-    BLINK_SPEED = 10
+    BLINK_FREQUENCY = 10
 
     def __init__(self):
         self.unfortunately = False
@@ -193,7 +193,7 @@ class GameOver(object):
             return
 
         self._show_counter += 1
-        if self._show_counter % GameOver.BLINK_SPEED == 0:
+        if self._show_counter % GameOver.BLINK_FREQUENCY == 0:
             self._show = not self._show
 
     def draw(self, surface, field_size):
