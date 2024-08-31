@@ -78,6 +78,7 @@ class App:
             projectile.update(self._size)
             if projectile.finished():
                 self._projectiles.remove(projectile)
+                continue
 
             for invader in self._invaders:
                 if not invader.is_exploding() and invader.rect().colliderect(projectile.rect()):
