@@ -27,6 +27,7 @@ class App:
         self._invaders = [self.spawn_invader()]
         self._invader_spawn_counter = 0
         self._projectiles = []
+        self._bombs = []
         self._score = Score()
 
     def spawn_invader(self):
@@ -61,7 +62,7 @@ class App:
                     (len(self._projectiles) == 0 or (self._projectiles[-1].rect().centery < self._size[1] - SPACESHIP_H)):
                 self._score.shot()
                 rect = self._ship.rect()
-                self._projectiles.append(self.spawn_projectile(rect.center))
+                self._projectiles.append(Projectile(rect.center))
 
     def on_loop(self):
         self._ship.update(self._size)
@@ -89,6 +90,21 @@ class App:
         if len(self._invaders) < MAX_ENEMIES_NUMBER and self._invader_spawn_counter % 100 == 0:
             self._invaders.append(self.spawn_invader())
 
+        if len(self._invaders) > 0 and self._invader_spawn_counter % 50 == 0:
+            n = random_generator.randint(0, len(self._invaders) - 1)
+            invader_rect = self._invaders[n].rect()
+            print(invader_rect, tuple(invader.rect() for invader in self._invaders))
+            self._bombs.append(Bomb((invader_rect.center[0], invader_rect.bottom)))
+
+        for bomb in self._bombs:
+            bomb.update(self._size)
+            if bomb.finished():
+                self._bombs.remove(bomb)
+                continue
+
+            if not self._ship.is_exploding() and bomb.rect().colliderect(self._ship.rect()):
+                self._ship.explode()
+
     def on_render(self):
         pygame.time.Clock().tick(FPS)
         self._display_surf.fill(BG_COLOR)
@@ -100,6 +116,9 @@ class App:
 
         for projectile in self._projectiles:
             projectile.draw(self._display_surf)
+
+        for bomb in self._bombs:
+            bomb.draw(self._display_surf)
 
         self._score.draw(self._display_surf, self._size)
 

@@ -3,6 +3,8 @@ from pygame import sprite
 
 PROJECTILE_W, PROJECTILE_H = 11, 17
 PROJECTILE_SPEED = 10
+
+BOMB_W, BOMB_H = 30, 37
 BOMB_SPEED = 5
 
 INVADER_W, INVADER_H = 90, 60
@@ -22,6 +24,7 @@ class Animation(sprite.Sprite):
         self._frames = images
         self._frame_number = 0
         self._rect = images[self._frame_number].get_rect()
+        self._rect.center = position
         self._should_loop = should_loop
         self._finished = False
         self._draw_counter = 0
@@ -199,6 +202,25 @@ class Projectile(sprite.Sprite):
 class Bomb(sprite.Sprite):
     def __init__(self, position):
         super().__init__()
-        self._image = pygame.image.load("resources/bomb.png")
+        self._image = pygame.transform.scale(pygame.image.load("resources/bomb.png"), (BOMB_W, BOMB_H))
         self._rect = self._image.get_rect()
         self._rect.center = position
+        self._finished = False
+
+    def update(self, field_size):
+        if self._finished:
+            return
+
+        position = self._rect.center
+        self._rect.center = (position[0], position[1] + BOMB_SPEED)
+        if self._rect.top > field_size[1]:
+            self._finished = True
+
+    def draw(self, surface):
+        surface.blit(self._image, self._rect)
+
+    def finished(self):
+        return self._finished
+
+    def rect(self):
+        return self._rect.copy()
