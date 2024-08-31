@@ -3,6 +3,7 @@ from pygame import sprite
 
 PROJECTILE_W, PROJECTILE_H = 11, 17
 PROJECTILE_SPEED = 10
+BOMB_SPEED = 5
 
 INVADER_W, INVADER_H = 90, 60
 INVADER_DX = -5
@@ -61,23 +62,55 @@ class Animation(sprite.Sprite):
 
 class Spaceship(object):
     def __init__(self, position):
-        self.images = [
+        self._images = [
             pygame.transform.scale(pygame.image.load("resources/spaceship.png"), (SPACESHIP_W, SPACESHIP_H)),
         ]
-        self.animation = Animation(self.images, position)
-        self.speed = 0
+        explosion = pygame.image.load("resources/explosion.png")
+        self._explode_images = [
+            pygame.transform.scale(explosion, (EXPLOSION_W / 2, EXPLOSION_H / 2)),
+            pygame.transform.scale(explosion, (EXPLOSION_W / 1.9, EXPLOSION_H / 1.9)),
+            pygame.transform.scale(explosion, (EXPLOSION_W / 1.7, EXPLOSION_H / 1.7)),
+            pygame.transform.scale(explosion, (EXPLOSION_W / 1.5, EXPLOSION_H / 1.5)),
+            pygame.transform.scale(explosion, (EXPLOSION_W / 1.3, EXPLOSION_H / 1.3)),
+            pygame.transform.scale(explosion, (EXPLOSION_W / 1.1, EXPLOSION_H / 1.1)),
+            pygame.transform.scale(explosion, (EXPLOSION_W, EXPLOSION_H)),
+            pygame.transform.scale(explosion, (EXPLOSION_W / 1.1, EXPLOSION_H / 1.1)),
+            pygame.transform.scale(explosion, (EXPLOSION_W / 1.3, EXPLOSION_H / 1.3)),
+            pygame.transform.scale(explosion, (EXPLOSION_W / 1.5, EXPLOSION_H / 1.5)),
+            pygame.transform.scale(explosion, (EXPLOSION_W / 1.7, EXPLOSION_H / 1.7)),
+            pygame.transform.scale(explosion, (EXPLOSION_W / 1.9, EXPLOSION_H / 1.9)),
+            pygame.transform.scale(explosion, (EXPLOSION_W / 2, EXPLOSION_H / 2)),
+        ]
+        self._animation = Animation(self._images, position)
+        self._speed = 0
+        self._is_exploding = False
 
     def draw(self, surface):
-        self.animation.draw(surface)
+        self._animation.draw(surface)
 
     def update(self, field_size):
-        if self.animation.position[0] - SPACESHIP_W / 2 + self.speed < 0 or self.animation.position[0] + SPACESHIP_W / 2 + self.speed > field_size[0]:
-            self.speed = 0
-        if self.speed != 0:
-            self.animation.position = (self.animation.position[0] + self.speed, self.animation.position[1])
+        if self._animation.position[0] - SPACESHIP_W / 2 + self._speed < 0 or \
+                self._animation.position[0] + SPACESHIP_W / 2 + self._speed > field_size[0]:
+            self._speed = 0
+        if self._speed != 0:
+            self._animation.position = (self._animation.position[0] + self._speed, self._animation.position[1])
 
     def move(self, speed):
-        self.speed = speed
+        self._speed = speed
+
+    def rect(self):
+        return self._animation.rect()
+
+    def explode(self):
+        self._animation = Animation(self._explode_images, self._animation.position, 1, False)
+        self._speed = 0
+        self._is_exploding = True
+
+    def finished(self):
+        return self._animation.finished()
+
+    def is_exploding(self):
+        return self._is_exploding
 
 
 class Invader(sprite.Sprite):
@@ -102,35 +135,35 @@ class Invader(sprite.Sprite):
             pygame.transform.scale(explosion, (EXPLOSION_W / 1.9, EXPLOSION_H / 1.9)),
             pygame.transform.scale(explosion, (EXPLOSION_W / 2, EXPLOSION_H / 2)),
         ]
-        self.animation = Animation(self._invader_images, position)
-        self.speed = INVADER_DX if move_left else -INVADER_DX
+        self._animation = Animation(self._invader_images, position)
+        self._speed = INVADER_DX if move_left else -INVADER_DX
         self._is_exploding = False
 
     def draw(self, surface):
-        self.animation.draw(surface)
+        self._animation.draw(surface)
 
     def update(self, field_size):
         w, h = field_size
-        if self.animation.position[0] - INVADER_W / 2 + self.speed < 0 or self.animation.position[0] + INVADER_W / 2 + self.speed > w:
-            self.animation.position = (self.animation.position[0], self.animation.position[1] + INVADER_DY)
-            self.speed = -self.speed
+        if self._animation.position[0] - INVADER_W / 2 + self._speed < 0 or self._animation.position[0] + INVADER_W / 2 + self._speed > w:
+            self._animation.position = (self._animation.position[0], self._animation.position[1] + INVADER_DY)
+            self._speed = -self._speed
         else:
-            self.animation.position = (self.animation.position[0] + self.speed, self.animation.position[1])
+            self._animation.position = (self._animation.position[0] + self._speed, self._animation.position[1])
 
-        if self.animation.position[1] + INVADER_H / 2 + INVADER_DY > h:
-            self.animation.position = (self.animation.position[0] + self.speed, self.animation.position[1] - INVADER_DY)
+        if self._animation.position[1] + INVADER_H / 2 + INVADER_DY > h:
+            self._animation.position = (self._animation.position[0] + self._speed, self._animation.position[1] - INVADER_DY)
             self.explode()
 
     def rect(self):
-        return self.animation.rect()
+        return self._animation.rect()
 
     def explode(self):
-        self.animation = Animation(self._explode_images, self.animation.position, 1, False)
-        self.speed = 0
+        self._animation = Animation(self._explode_images, self._animation.position, 1, False)
+        self._speed = 0
         self._is_exploding = True
 
     def finished(self):
-        return self.animation.finished()
+        return self._animation.finished()
 
     def is_exploding(self):
         return self._is_exploding
@@ -166,6 +199,6 @@ class Projectile(sprite.Sprite):
 class Bomb(sprite.Sprite):
     def __init__(self, position):
         super().__init__()
-        self.image = pygame.image.load("resources/bomb.png")
-        self.rect = self.image.get_rect()
-        self.rect.center = position
+        self._image = pygame.image.load("resources/bomb.png")
+        self._rect = self._image.get_rect()
+        self._rect.center = position

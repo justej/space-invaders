@@ -21,13 +21,13 @@ class App:
     def __init__(self):
         self._running = True
         self._display_surf = None
-        self.size = self.width, self.height = 640, 400
-        self.ship = Spaceship((self.width / 2, self.height - SPACESHIP_H / 2))
-        self.background = pygame.image.load("resources/background.png")
-        self.invaders = [self.spawn_invader()]
-        self.invader_spawn_counter = 0
-        self.projectiles = []
-        self.score = Score()
+        self._size = self.width, self.height = 640, 400
+        self._ship = Spaceship((self.width / 2, self.height - SPACESHIP_H / 2))
+        self._background = pygame.image.load("resources/background.png")
+        self._invaders = [self.spawn_invader()]
+        self._invader_spawn_counter = 0
+        self._projectiles = []
+        self._score = Score()
 
     def spawn_invader(self):
         x = random_generator.randint(INVADER_W / 2, self.width - INVADER_W / 2)
@@ -38,7 +38,7 @@ class App:
 
     def on_init(self):
         pygame.init()
-        self._display_surf = pygame.display.set_mode(self.size, pygame.HWSURFACE | pygame.DOUBLEBUF)
+        self._display_surf = pygame.display.set_mode(self._size, pygame.HWSURFACE | pygame.DOUBLEBUF)
         self._running = True
 
         pygame.time.Clock().tick(FPS)
@@ -50,57 +50,58 @@ class App:
 
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT]:
-            self.ship.move(-SHIP_SPEED)
+            self._ship.move(-SHIP_SPEED)
         elif keys[pygame.K_RIGHT]:
-            self.ship.move(SHIP_SPEED)
+            self._ship.move(SHIP_SPEED)
         else:
-            self.ship.move(0)
+            self._ship.move(0)
 
         if keys[pygame.K_SPACE]:
-            if len(self.projectiles) < MAX_PROJECTILES_NUMBER and (len(self.projectiles) == 0 or (self.projectiles[-1].rect().centery < self.size[1] - SPACESHIP_H)):
-                self.score.shot()
-                self.projectiles.append(self.spawn_projectile(self.ship.animation.position))
+            if len(self._projectiles) < MAX_PROJECTILES_NUMBER and \
+                    (len(self._projectiles) == 0 or (self._projectiles[-1].rect().centery < self._size[1] - SPACESHIP_H)):
+                self._score.shot()
+                rect = self._ship.rect()
+                self._projectiles.append(self.spawn_projectile(rect.center))
 
     def on_loop(self):
-        self.ship.update(self.size)
+        self._ship.update(self._size)
 
-        for invader in self.invaders:
+        for invader in self._invaders:
             if invader.finished():
-                self.invaders.remove(invader)
-                self.invaders.append(self.spawn_invader())
+                self._invaders.remove(invader)
+                self._invaders.append(self.spawn_invader())
             else:
-                invader.update(self.size)
+                invader.update(self._size)
 
-        for projectile in self.projectiles:
-            projectile.update(self.size)
+        for projectile in self._projectiles:
+            projectile.update(self._size)
             if projectile.finished():
-                self.projectiles.remove(projectile)
+                self._projectiles.remove(projectile)
 
-            for invader in self.invaders:
+            for invader in self._invaders:
                 if not invader.is_exploding() and invader.rect().colliderect(projectile.rect()):
                     invader.explode()
-                    self.score.inveder_hit()
-                    self.projectiles.remove(projectile)
+                    self._score.inveder_hit()
+                    self._projectiles.remove(projectile)
                     break
 
-        self.invader_spawn_counter += 1
-        if len(self.invaders) < MAX_ENEMIES_NUMBER and self.invader_spawn_counter > 100:
-            self.invaders.append(self.spawn_invader())
-            self.invader_spawn_counter = 0
+        self._invader_spawn_counter += 1
+        if len(self._invaders) < MAX_ENEMIES_NUMBER and self._invader_spawn_counter % 100 == 0:
+            self._invaders.append(self.spawn_invader())
 
     def on_render(self):
         pygame.time.Clock().tick(FPS)
         self._display_surf.fill(BG_COLOR)
-        self._display_surf.blit(self.background, self.background.get_rect())
-        self.ship.draw(self._display_surf)
+        self._display_surf.blit(self._background, self._background.get_rect())
+        self._ship.draw(self._display_surf)
 
-        for invader in self.invaders:
+        for invader in self._invaders:
             invader.draw(self._display_surf)
 
-        for projectile in self.projectiles:
+        for projectile in self._projectiles:
             projectile.draw(self._display_surf)
 
-        self.score.draw(self._display_surf, self.size)
+        self._score.draw(self._display_surf, self._size)
 
         pygame.display.update()
 
