@@ -13,6 +13,7 @@ FG_COLOR = pygame.Color(255, 255, 255)
 
 FPS = 60
 FONT_SIZE = 30
+GAME_OVER_FONT_SIZE = 60
 
 random_generator = Random()
 
@@ -28,7 +29,8 @@ class App:
         self._invader_spawn_counter = 0
         self._projectiles = []
         self._bombs = []
-        self._score = Score()
+        self._score = None
+        self._game_over = None
 
     def spawn_invader(self):
         x = random_generator.randint(INVADER_W / 2, self.width - INVADER_W / 2)
@@ -44,6 +46,11 @@ class App:
 
         pygame.time.Clock().tick(FPS)
         pygame.display.set_caption("Space invaders")
+
+        pygame.font.init()
+
+        self._score = Score()
+        self._game_over = GameOver()
 
     def on_event(self, event):
         if event.type == pygame.QUIT:
@@ -65,6 +72,10 @@ class App:
                 self._projectiles.append(Projectile(rect.center))
 
     def on_loop(self):
+        if self._game_over.unfortunately:
+            self._game_over.update()
+            return
+
         self._ship.update(self._size)
 
         for invader in self._invaders:
@@ -94,7 +105,6 @@ class App:
         if len(self._invaders) > 0 and self._invader_spawn_counter % 50 == 0:
             n = random_generator.randint(0, len(self._invaders) - 1)
             invader_rect = self._invaders[n].rect()
-            print(invader_rect, tuple(invader.rect() for invader in self._invaders))
             self._bombs.append(Bomb((invader_rect.center[0], invader_rect.bottom)))
 
         for bomb in self._bombs:
@@ -104,7 +114,11 @@ class App:
                 continue
 
             if not self._ship.is_exploding() and bomb.rect().colliderect(self._ship.rect()):
+                self._bombs.remove(bomb)
                 self._ship.explode()
+
+        if self._ship.finished():
+            self._game_over.unfortunately = True
 
     def on_render(self):
         pygame.time.Clock().tick(FPS)
@@ -122,6 +136,7 @@ class App:
             bomb.draw(self._display_surf)
 
         self._score.draw(self._display_surf, self._size)
+        self._game_over.draw(self._display_surf, self._size)
 
         pygame.display.update()
 
@@ -144,8 +159,6 @@ class Score(object):
     def __init__(self):
         self._projectiles_count = 0
         self._invaders_count = 0
-
-        pygame.font.init()
         self._font = pygame.font.SysFont('Comic Sans MS', FONT_SIZE)
 
     def shot(self):
@@ -159,6 +172,28 @@ class Score(object):
         surface.blit(text_invaders, (FONT_SIZE * 2, 0))
         text_projectiles = self._font.render(f"SHOT: {str(self._projectiles_count)}", False, FG_COLOR)
         surface.blit(text_projectiles, (field_size[0] - FONT_SIZE * 6, 0))
+
+
+class GameOver(object):
+    def __init__(self):
+        self.unfortunately = False
+        font = pygame.font.SysFont('Comic Sans MS', GAME_OVER_FONT_SIZE)
+        self._text = font.render("Game Over", False, FG_COLOR)
+        self._show = True
+        self._show_counter = 0
+
+    def update(self):
+        if not self.unfortunately:
+            return
+
+        self._show_counter += 1
+        if self._show_counter % 10 == 0:
+            self._show = not self._show
+
+    def draw(self, surface, field_size):
+        if self.unfortunately and self._show:
+            text_size = self._text.get_size()
+            surface.blit(self._text, ((field_size[0] - text_size[0]) / 2, (field_size[1] - text_size[1]) / 2))
 
 
 if __name__ == "__main__":
