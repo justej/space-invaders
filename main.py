@@ -19,14 +19,16 @@ class App:
         self._running = True
         self._display_surf = None
         self._size = self.width, self.height = App.FIELD_SIZE
-        self._ship = Spaceship((self.width / 2, self.height - Spaceship.H / 2))
         self._background = pygame.image.load("resources/background.png")
-        self._invaders = [self.spawn_invader()]
+
+        self._ship = None
+        self._invaders = None
         self._invader_spawn_counter = 0
-        self._projectiles = []
-        self._bombs = []
+        self._projectiles = None
+        self._bombs = None
         self._score = None
         self._game_over = None
+        self._menu = None
 
     def spawn_invader(self):
         x = App.random_generator.randint(Invader.W / 2, self.width - Invader.W / 2)
@@ -35,6 +37,16 @@ class App:
     def spawn_projectile(self, position):
         return Projectile(position)
 
+    def init_game(self):
+        self._ship = Spaceship((self.width / 2, self.height - Spaceship.H / 2))
+        self._invaders = [self.spawn_invader()]
+        self._invader_spawn_counter = 0
+        self._projectiles = []
+        self._bombs = []
+        self._score = Score()
+        self._game_over = GameOver()
+        self._menu = Menu()
+
     def on_init(self):
         pygame.init()
         self._display_surf = pygame.display.set_mode(self._size, pygame.HWSURFACE | pygame.DOUBLEBUF)
@@ -42,17 +54,37 @@ class App:
 
         pygame.time.Clock().tick(App.FPS)
         pygame.display.set_caption("Space invaders")
-
         pygame.font.init()
-
-        self._score = Score()
-        self._game_over = GameOver()
+        self.init_game()
 
     def on_event(self, event):
         if event.type == pygame.QUIT:
             self._running = False
+            return
+
+        if event.type not in (pygame.KEYDOWN, pygame.KEYUP):
+            return
 
         keys = pygame.key.get_pressed()
+
+        if self._menu.show:
+            if keys[pygame.K_UP]:
+                self._menu.selected_item -= 1
+            if keys[pygame.K_DOWN]:
+                self._menu.selected_item += 1
+
+            if self._menu.selected_item < 0:
+                self._menu.selected_item = 0
+            if self._menu.selected_item > 1:
+                self._menu.selected_item = 1
+
+            if keys[pygame.K_SPACE]:
+                if self._menu.selected_item == 0:
+                    self.init_game()
+                if self._menu.selected_item == 1:
+                    self._running = False
+            return
+
         if keys[pygame.K_LEFT]:
             self._ship.move(-Spaceship.SPEED)
         elif keys[pygame.K_RIGHT]:
@@ -70,6 +102,7 @@ class App:
     def on_loop(self):
         if self._game_over.unfortunately:
             self._game_over.update()
+            self._menu.update()
             return
 
         self._ship.update(self._size)
@@ -118,6 +151,7 @@ class App:
 
         if self._ship.finished():
             self._game_over.unfortunately = True
+            self._menu.show = True
 
     def on_render(self):
         pygame.time.Clock().tick(App.FPS)
@@ -136,6 +170,7 @@ class App:
 
         self._score.draw(self._display_surf, self._size)
         self._game_over.draw(self._display_surf, self._size)
+        self._menu.draw(self._display_surf, self._size)
 
         pygame.display.update()
 
@@ -200,6 +235,33 @@ class GameOver(object):
         if self.unfortunately and self._show:
             text_size = self._text.get_size()
             surface.blit(self._text, ((field_size[0] - text_size[0]) / 2, (field_size[1] - text_size[1]) / 2))
+
+
+class Menu(object):
+    FONT_SIZE = 40
+    COLOR = pygame.Color(0, 255, 255)
+
+    def __init__(self):
+        font = pygame.font.SysFont('Comic Sans MS', Menu.FONT_SIZE)
+        self.show = False
+        self._text = {
+            0: font.render('New game', False, Menu.COLOR),
+            1: font.render('Exit', False, Menu.COLOR),
+        }
+        self.selected_item = 0
+
+    def update(self):
+        pass
+
+    def draw(self, surface, field_size):
+        if self.show:
+            for i, text in self._text.items():
+                text_size = text.get_size()
+                x = (field_size[0] - text_size[0]) / 2
+                y = (field_size[1] - GameOver.FONT_SIZE) / 2 + (1.3 * i + 2) * Menu.FONT_SIZE
+                surface.blit(text, (x, y))
+                if i == self.selected_item:
+                    pygame.draw.rect(surface, Menu.COLOR, (x - 5, y, text_size[0] + 10, text_size[1]), 5)
 
 
 if __name__ == "__main__":
